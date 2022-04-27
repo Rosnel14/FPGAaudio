@@ -1,37 +1,43 @@
-
-module FPGAaudio(CLOCK_50,KEY,GPIO);
+//selector module done!! 4/26/22
+module FPGAaudio(CLOCK_50,KEY,SW,GPIO);
 
 input CLOCK_50; 
 input [0:3]KEY; //input for the keys 
+input [0:1]SW; //police siren 
 output [0:3]GPIO; //output to speaker 
 
 wire clkOut; //output from divider 
 
+wire sirenOut; //output from sirenModule 
+
 Clock_divider clkDiv(CLOCK_50,clkOut);
 
-reg [15:0] counterA;
-always @(posedge clkOut) if(counterA==56817) counterA <= 0; else counterA <= counterA+1;
-
 reg [15:0] counterC;
-always @(posedge clkOut) if(counterC==95419) counterC <= 0; else counterC <= counterC+1;  
+always @(posedge clkOut) if(counterC==47782) counterC <= 0; else counterC <= counterC+1; //C
 
-reg [15:0] counterF;
-always @(posedge clkOut) if(counterF==71633) counterF <= 0; else counterF <= counterF+1; 
+reg [15:0] counterD;
+always @(posedge clkOut) if(counterD==42567) counterD <= 0; else counterD <= counterD+1; //D
+
+reg [15:0] counterE;
+always @(posedge clkOut) if(counterE==37922) counterE <= 0; else counterE <= counterE+1; //E
 
 reg [15:0] counterG;
-always @(posedge clkOut) if(counterG==63775) counterG <= 0; else counterG <= counterG+1;  
+always @(posedge clkOut) if(counterG==35793) counterG <= 0; else counterG <= counterG+1;  //G
 
-assign GPIO[0] = ~KEY[0] &&  counterA[15] ||~KEY[1] &&  counterC[15]||~KEY[2] &&  counterF[15]||~KEY[3] &&  counterG[15]; //this allows control of the note 
+//this is really funny
+PoliceSiren siren0(CLOCK_50,sirenOut);
+ 
 
-//assign GPIO[1] = ~KEY[1] &&  counterC[15];
+//output statement 
+assign GPIO[0] =  ~KEY[0] &&  counterC[15] ||~KEY[1] &&  counterD[15]||~KEY[2] &&  counterE[15]||~KEY[3] &&  counterG[15]; //this allows control of the note 
 
-//assign GPIO[2] = ~KEY[2] &&  counterF[15];
-
-//assign GPIO[3] = ~KEY[3] &&  counterG[15];
+assign GPIO[1] = sirenOut;
 
 
 
 endmodule 
+
+
 
 //just testing A note
 module Anote(CLOCK_50,KEY,GPIO,); 
@@ -71,12 +77,12 @@ and(out3,A0,A1);
 endmodule 
 
 
-//PoliceSirenModule
-module PoliceSiren(CLOCK_50, GPIO);
-input CLOCK_50;
-output [0:1]GPIO; //speaker out 
+//PoliceSirenModule, expecting 50mhz input 
+module PoliceSiren(clk, speaker);
+input clk;
+output speaker; //speaker out 
 
-Clock_divider clkDiv(CLOCK_50,clkOut);
+Clock_divider clkDiv(clk,clkOut);
 
 reg [27:0] tone;
 always @(posedge clkOut) tone <= tone+1;
@@ -98,7 +104,6 @@ always @(posedge clkOut) if(counter==0) counter <= clkdivider; else counter <= c
 reg speaker;
 always @(posedge clkOut) if(counter==0) speaker <= ~speaker;
 
-assign GPIO[0] = speaker; 
 
 endmodule
 
