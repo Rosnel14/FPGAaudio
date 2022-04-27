@@ -4,7 +4,7 @@ module FPGAaudio(CLOCK_50,KEY,SW,GPIO);
 input CLOCK_50; 
 input [0:3]KEY; //input for the keys 
 input [0:1]SW; //police siren 
-output [0:3]GPIO; //output to speaker 
+output [0:1]GPIO; //output to speaker 
 
 wire clkOut; //output from divider 
 
@@ -31,7 +31,7 @@ PoliceSiren siren0(CLOCK_50,sirenOut);
 //output statement 
 assign GPIO[0] =  ~KEY[0] &&  counterC[15] ||~KEY[1] &&  counterD[15]||~KEY[2] &&  counterE[15]||~KEY[3] &&  counterG[15]; //this allows control of the note 
 
-assign GPIO[1] = sirenOut;
+assign GPIO[1] = SW[0] && sirenOut;
 
 
 
@@ -59,22 +59,6 @@ endmodule
 
 
 
-//this is used to set output high for desired note 
-//out 1 = A
-//out 2 = B
-//out 3 = C
-module noteDecoder(A0,A1,out0,out1,out2,out3); 
-
-input A0,A1; 
-output out0,out1,out2,out3; 
-
-and(out0,~A0,~A1);
-and(out1,A0,~A1); 
-and(out2,~A0,A1);
-and(out3,A0,A1);
-
-
-endmodule 
 
 
 //PoliceSirenModule, expecting 50mhz input 
@@ -110,41 +94,6 @@ endmodule
 
 
 
-
-//division module 
-module divide_by12(numer, quotient, remain);
-input [5:0] numer;
-output [2:0] quotient;
-output [3:0] remain;
-
-reg [2:0] quotient;
-reg [3:0] remain_bit3_bit2;
-
-// the first 2 bits are copied through
-// effectively dividing by 4
-
-assign remain = {remain_bit3_bit2, numer[1:0]}; 
-
-always @(numer[5:2]) // and just do a divide by "3" on the remaining bits
-case(numer[5:2])
-   0: begin quotient=0; remain_bit3_bit2=0; end
-   1: begin quotient=0; remain_bit3_bit2=1; end
-   2: begin quotient=0; remain_bit3_bit2=2; end
-   3: begin quotient=1; remain_bit3_bit2=0; end
-   4: begin quotient=1; remain_bit3_bit2=1; end
-   5: begin quotient=1; remain_bit3_bit2=2; end
-   6: begin quotient=2; remain_bit3_bit2=0; end
-   7: begin quotient=2; remain_bit3_bit2=1; end
-   8: begin quotient=2; remain_bit3_bit2=2; end
-   9: begin quotient=3; remain_bit3_bit2=0; end
- 10: begin quotient=3; remain_bit3_bit2=1; end
- 11: begin quotient=3; remain_bit3_bit2=2; end
- 12: begin quotient=4; remain_bit3_bit2=0; end
- 13: begin quotient=4; remain_bit3_bit2=1; end
- 14: begin quotient=4; remain_bit3_bit2=2; end
- 15: begin quotient=5; remain_bit3_bit2=0; end
-endcase
-endmodule
 
 
 //frequency divider (50 > 25mhz)
