@@ -1,27 +1,34 @@
 // look in pins.pcf for all the pin names on the TinyFPGA BX board
-module top (
-    input CLK,    // 16MHz clock
-    output LED,   // User/boot LED next to power LED
-    output USBPU  // USB pull-up resistor
-);
-    // drive USB pull-up resistor to '0' to disable USB
-    assign USBPU = 0;
+//FPGAaudio module
+// recall that buttons work on the negedge
 
-    ////////
-    // make a simple blink circuit
-    ////////
+module top(CLK,PIN_13,PIN_12,PIN_11,PIN_10,PIN_22);
 
-    // keep track of time and location in blink_pattern
-    reg [25:0] blink_counter;
+input CLK;
+input PIN_13,PIN_12,PIN_11,PIN_10; //input buttons
+output PIN_22; //speaker output
 
-    // pattern that will be flashed over the LED over time
-    wire [31:0] blink_pattern = 32'b101010001110111011100010101;
+//if statement constants different for 16mhz clock
+reg [15:0] counterC;
+always @(posedge CLK) if(counterC==61157) counterC <= 0; else counterC <= counterC+1; //C
 
-    // increment the blink_counter every clock
-    always @(posedge CLK) begin
-        blink_counter <= blink_counter + 1;
-    end
-    
-    // light up the LED according to the pattern
-    assign LED = blink_pattern[blink_counter[25:21]];
+reg [15:0] counterD;
+always @(posedge CLK) if(counterD==54484) counterD <= 0; else counterD <= counterD+1; //D
+
+reg [15:0] counterE;
+always @(posedge CLK) if(counterE==48540) counterE <= 0; else counterE <= counterE+1; //E
+
+reg [15:0] counterG;
+always @(posedge CLK) if(counterG==91632) counterG <= 0; else counterG <= counterG+1;  //F
+
+//mux statement
+//m41 noteout(PIN_22,counterC,counterD,counterE,counterG,~PIN_13,~PIN_12);
+
+//output statement
+//xor(PIN_22, (PIN_13 && counterD),(PIN_12&& counterC)) ; //this allows control of the note
+
+assign PIN_22 = (PIN_13 && counterC[15]) || (PIN_12 && counterD[15]) || (PIN_11 && counterE[15]) || (PIN_10 && counterG[15]);
+
+
+
 endmodule
